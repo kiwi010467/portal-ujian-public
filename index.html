@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Login Ujian</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
+
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg,#7b7b7b,#5d5d5d);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:20px;
+      color:white;
+    }
+
+    .container{
+      width:100%;
+      max-width:650px;
+      background:rgba(25,25,25,0.93);
+      border:4px solid #d9d9d9;
+      border-radius:24px;
+      padding:35px 28px;
+      text-align:center;
+      box-shadow:0 0 30px rgba(0,0,0,0.4);
+    }
+
+    .logo{
+      width:110px;
+      height:110px;
+      object-fit:contain;
+      margin-bottom:18px;
+    }
+
+    .school{
+      font-size:clamp(24px,4vw,34px);
+      font-weight:bold;
+      margin-bottom:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .exam{
+  font-size:clamp(15px,2.3vw,22px);
+  font-weight:bold;
+  margin-bottom:14px;
+  color:#f2f2f2;
+  line-height:1.4;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+
+  word-break:keep-all;
+}
+
+    .year{
+      font-size:clamp(15px,2.4vw,19px);
+      margin-bottom:35px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      color:#d9d9d9;
+    }
+
+    .group{
+      text-align:left;
+      margin-bottom:20px;
+    }
+
+    .group label{
+      display:block;
+      margin-bottom:8px;
+      font-weight:bold;
+      font-size:16px;
+      white-space:nowrap;
+    }
+
+    .group input{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      font-size:16px;
+      outline:none;
+      background:#f2f2f2;
+    }
+
+    .group input:focus{
+      box-shadow:0 0 10px rgba(77,163,255,0.7);
+    }
+
+    .btn{
+      width:100%;
+      padding:15px;
+      border:none;
+      border-radius:14px;
+      background:linear-gradient(135deg,#2d89ef,#005fcc);
+      color:white;
+      font-size:17px;
+      font-weight:bold;
+      cursor:pointer;
+      transition:0.3s;
+      margin-top:10px;
+    }
+
+    .btn:hover{
+      opacity:0.95;
+      transform:translateY(-2px);
+    }
+
+    .btn:disabled{
+      opacity:0.6;
+      cursor:not-allowed;
+    }
+
+    .status{
+      margin-top:20px;
+      font-size:15px;
+      color:#ffe082;
+      min-height:24px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .info{
+      margin-top:20px;
+      font-size:14px;
+      color:#d7d7d7;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    @media(max-width:480px){
+
+      .container{
+        padding:28px 18px;
+      }
+
+      .logo{
+        width:90px;
+        height:90px;
+      }
+
+      .group input{
+        font-size:15px;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <img src="logo.png" class="logo">
+
+    <div class="school">
+      SMP PGRI 1 CIBINONG
+    </div>
+
+    <div class="exam">
+      ASESMEN SUMATIF TENGAH SEMESTER GANJIL
+    </div>
+
+    <div class="year">
+      Tahun Ajaran 2026/2027
+    </div>
+
+    <form id="loginForm">
+
+      <div class="group">
+        <label>ID Peserta</label>
+        <input
+          type="text"
+          id="peserta"
+          placeholder="Contoh: P0001"
+          required
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="group">
+        <label>Password / PIN Akses</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Masukkan Password"
+          required
+          autocomplete="off"
+        >
+      </div>
+
+      <button type="submit" class="btn" id="loginBtn">
+        LOGIN
+      </button>
+
+      <div class="status" id="status"></div>
+
+    </form>
+
+    <div class="info">
+      Pastikan koneksi internet stabil sebelum login ke portal ujian.
+    </div>
+
+  </div>
+
+  <script>
+
+    const form = document.getElementById("loginForm");
+    const statusText = document.getElementById("status");
+    const loginBtn = document.getElementById("loginBtn");
+
+    const BACKEND_URL =
+      "https://namaprojectanda.vercel.app/api/login";
+
+    const REDIRECT_URL =
+      "https://sites.google.com/view/final-exam-v2025/portal-ujian-android?authuser=1";
+
+    function randomDelay(){
+      return Math.floor(Math.random() * 2500) + 500;
+    }
+
+    function sleep(ms){
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    form.addEventListener("submit", async function(e){
+
+      e.preventDefault();
+
+      const peserta =
+        document.getElementById("peserta").value.trim();
+
+      const password =
+        document.getElementById("password").value.trim();
+
+      if(!peserta || !password){
+
+        statusText.innerText =
+          "ID Peserta dan Password wajib diisi.";
+
+        return;
+      }
+
+      loginBtn.disabled = true;
+
+      statusText.innerText =
+        "Memverifikasi login... dimohon bersabar.";
+
+      try{
+
+        await sleep(randomDelay());
+
+        const response = await fetch(BACKEND_URL,{
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":"application/json"
+          },
+
+          body:JSON.stringify({
+            peserta,
+            password
+          })
+
+        });
+
+        const result = await response.json();
+
+        if(result.success){
+
+          statusText.innerText =
+            "Login berhasil. Mengalihkan ke portal ujian...";
+
+          await sleep(1200);
+
+          window.location.href = REDIRECT_URL;
+
+        }else{
+
+          statusText.innerText =
+            "ID Peserta atau Password salah.";
+
+          loginBtn.disabled = false;
+
+        }
+
+      }catch(error){
+
+        console.error(error);
+
+        statusText.innerText =
+          "Server sedang sibuk. Silakan coba kembali.";
+
+        loginBtn.disabled = false;
+
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>
