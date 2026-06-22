@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Portal Login Ujian</title>
 <style>
 :root{
@@ -10,37 +10,46 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
-/* Mengubah body menjadi area scroll murni tanpa flexbox yang mengunci layar */
-body{
-  font-family:Arial,Helvetica,sans-serif;
-  margin:0;
-  padding:0;
-  min-height: 100vh;
-  background:linear-gradient(135deg,#1d4ed8,#334155);
-  overflow-y: scroll; /* Memaksa scrollbar vertikal selalu aktif dan siap digeser */
-  -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg,#1d4ed8,#334155);
+  /* Mengaktifkan scroll alami secara agresif */
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Pembungkus luar untuk memastikan posisi kartu di tengah secara aman */
-.page-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 30px 20px 200px; /* Padding bawah sengaja dibuat besar (200px) agar bisa di-scroll bebas saat mengetik */
-  box-sizing: border-box;
+/* CONTAINER UTAMA: Menggunakan posisi absolut agar tidak terkunci oleh tinggi layar */
+.scroll-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 100%;
+  display: block; /* Menghindari Flexbox yang merusak scroll mobile */
+  padding: 40px 20px 0px;
 }
 
 .card{
-  width:min(100%,460px);
-  background:rgba(20,20,20,.88);
-  backdrop-filter:blur(10px);
-  border-radius:28px;
-  padding:28px;
-  box-shadow:0 12px 40px rgba(0,0,0,.35);
-  animation:fade .45s ease;
-  margin: auto 0; /* Fleksibel mengikuti ruang layar */
+  width: min(100%,460px);
+  background: rgba(20,20,20,.88);
+  backdrop-filter: blur(10px);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.35);
+  animation: fade .45s ease;
+  
+  /* Tengahkan kartu secara manual tanpa flexbox */
+  margin: 0 auto; 
+  position: relative;
+}
+
+/* SPACER GAIB: Memberikan ruang kosong di bawah kartu agar user bisa scroll bebas ke bawah saat keyboard aktif */
+.keyboard-spacer {
+  height: 380px; /* Tinggi ruang kosong penahan keyboard */
+  display: block;
+  pointer-events: none; /* Agar tidak bisa diklik */
 }
 
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
@@ -51,18 +60,18 @@ p{text-align:center;color:#d7d7d7;margin-bottom:1.4rem}
 label{display:block;color:#fff;font-weight:bold;margin:.7rem 0 .35rem}
 
 input{
-  font-size:16px; /* Wajib 16px untuk mencegah iOS otomatis nge-zoom layar */
-  width:100%;padding:15px 16px;border-radius:14px;border:none;
+  font-size:16px; /* Wajib 16px agar iOS Safari tidak nge-zoom otomatis */
+  width:100%; padding:15px 16px; border-radius:14px; border:none;
 }
 input:focus{outline:2px solid #60a5fa}
 
 button{
- width:100%;margin-top:18px;padding:15px;border:none;border-radius:14px;
- font-size:17px;font-weight:bold;background:#2563eb;color:#fff;
+ width:100%; margin-top:18px; padding:15px; border:none; border-radius:14px;
+ font-size:17px; font-weight:bold; background:#2563eb; color:#fff;
  transition:.2s;
 }
 button:hover{transform:translateY(-1px)}
-#status{margin-top:14px;min-height:1.4em;color:#fde68a;text-align:center}
+#status{margin-top:14px; min-height:1.4em; color:#fde68a; text-align:center}
 
 @media (prefers-color-scheme: light){
  body{background:linear-gradient(160deg,#dbeafe,#cbd5e1)}
@@ -74,7 +83,7 @@ button:hover{transform:translateY(-1px)}
 </head>
 <body>
 
-<div class="page-wrapper">
+<div class="scroll-container">
   <div class="card">
     <img src="logo.png" class="logo">
     <h1>SMP PGRI 1 CIBINONG</h1>
@@ -89,18 +98,20 @@ button:hover{transform:translateY(-1px)}
       <div id="status"></div>
     </form>
   </div>
+  
+  <div class="keyboard-spacer"></div>
 </div>
 
 <script>
 const BACKEND_URL="https://portal-ujian-backend-eyg4.vercel.app/api/login";
 const REDIRECT_URL="https://sites.google.com/view/assessment-vhego/portal-2-ujian";
 
-// Fungsi Scroll Otomatis yang Fleksibel ke Tengah Layar saat Kolom Ditekan
+// Dorong input ke tengah pandangan secara paksa sesaat setelah kolom di-tap
 document.querySelectorAll("input").forEach(el => {
   el.addEventListener("focus", () => {
     setTimeout(() => {
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
+    }, 400); // Delay ditambahkan sedikit agar sinkron dengan animasi keyboard HP
   });
 });
 
