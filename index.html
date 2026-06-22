@@ -2,25 +2,36 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Portal Login Ujian</title>
 <style>
 :root{
   color-scheme: light dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+
+/* Mengubah body menjadi area scroll murni tanpa flexbox yang mengunci layar */
 body{
   font-family:Arial,Helvetica,sans-serif;
   margin:0;
-  min-height: 100dvh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:20px;
+  padding:0;
+  min-height: 100vh;
   background:linear-gradient(135deg,#1d4ed8,#334155);
-  overflow-y:auto;
-  transition: align-items 0.3s ease; /* Transisi halus saat posisi bergeser */
+  overflow-y: scroll; /* Memaksa scrollbar vertikal selalu aktif dan siap digeser */
+  -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
 }
+
+/* Pembungkus luar untuk memastikan posisi kartu di tengah secara aman */
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 30px 20px 200px; /* Padding bawah sengaja dibuat besar (200px) agar bisa di-scroll bebas saat mengetik */
+  box-sizing: border-box;
+}
+
 .card{
   width:min(100%,460px);
   background:rgba(20,20,20,.88);
@@ -29,20 +40,22 @@ body{
   padding:28px;
   box-shadow:0 12px 40px rgba(0,0,0,.35);
   animation:fade .45s ease;
-  margin: auto 0;
-  transition: transform 0.3s ease; /* Transisi untuk pergeseran manual */
+  margin: auto 0; /* Fleksibel mengikuti ruang layar */
 }
+
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .logo{display:block;margin:0 auto 16px;width:clamp(110px,32vw,150px);height:auto}
 h1{text-align:center;font-size:clamp(1.5rem,5vw,2rem);color:#fff}
 h2{text-align:center;font-size:clamp(1rem,3.8vw,1.2rem);margin:.7rem 0;color:#e8e8e8}
 p{text-align:center;color:#d7d7d7;margin-bottom:1.4rem}
 label{display:block;color:#fff;font-weight:bold;margin:.7rem 0 .35rem}
+
 input{
-  font-size:16px; /* Wajib 16px agar iOS tidak memaksa auto-zoom */
+  font-size:16px; /* Wajib 16px untuk mencegah iOS otomatis nge-zoom layar */
   width:100%;padding:15px 16px;border-radius:14px;border:none;
 }
 input:focus{outline:2px solid #60a5fa}
+
 button{
  width:100%;margin-top:18px;padding:15px;border:none;border-radius:14px;
  font-size:17px;font-weight:bold;background:#2563eb;color:#fff;
@@ -57,73 +70,41 @@ button:hover{transform:translateY(-1px)}
  h1,h2,label{color:#111}
  p{color:#444}
 }
-
-/* Class bantuan ketika keyboard aktif (akan dimanipulasi via JS) */
-body.keyboard-active {
-  align-items: flex-start !important;
-}
-body.keyboard-active .card {
-  margin-top: 10px !important;
-  margin-bottom: 250px !important; /* Memberikan ruang kosong ekstra di bawah */
-}
 </style>
 </head>
 <body>
-<div class="card" id="mainCard">
-<img src="logo.png" class="logo">
-<h1>SMP PGRI 1 CIBINONG</h1>
-<h2>ASESMEN SUMATIF TENGAH SEMESTER GANJIL</h2>
-<p>Tahun Ajaran 2026/2027</p>
-<form id="loginForm">
-<label>ID Peserta</label>
-<input id="peserta" autocomplete="off" placeholder="Contoh: P0001">
-<label>Password / PIN Akses</label>
-<input id="password" type="password" placeholder="Masukkan Password">
-<button id="loginBtn" type="submit">LOGIN</button>
-<div id="status"></div>
-</form>
+
+<div class="page-wrapper">
+  <div class="card">
+    <img src="logo.png" class="logo">
+    <h1>SMP PGRI 1 CIBINONG</h1>
+    <h2>ASESMEN SUMATIF TENGAH SEMESTER GANJIL</h2>
+    <p>Tahun Ajaran 2026/2027</p>
+    <form id="loginForm">
+      <label>ID Peserta</label>
+      <input id="peserta" autocomplete="off" placeholder="Contoh: P0001">
+      <label>Password / PIN Akses</label>
+      <input id="password" type="password" placeholder="Masukkan Password">
+      <button id="loginBtn" type="submit">LOGIN</button>
+      <div id="status"></div>
+    </form>
+  </div>
 </div>
 
 <script>
 const BACKEND_URL="https://portal-ujian-backend-eyg4.vercel.app/api/login";
 const REDIRECT_URL="https://sites.google.com/view/assessment-vhego/portal-2-ujian";
 
-// 1. DETEKSI KEYBOARD BERDASARKAN TINGGI LAYAR (Paling Akurat untuk Mobile)
-const initialHeight = window.innerHeight;
-
-window.addEventListener('resize', () => {
-  // Jika tinggi layar berkurang lebih dari 150px, berasumsi keyboard muncul
-  if (window.innerHeight < initialHeight - 150) {
-    document.body.classList.add('keyboard-active');
-    
-    // Berikan sedikit delay agar transisi CSS selesai baru digulirkan ke tengah
-    setTimeout(() => {
-      const activeInput = document.activeElement;
-      if (activeInput && (activeInput.id === 'peserta' || activeInput.id === 'password')) {
-        activeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  } else {
-    // Keyboard tertutup, kembalikan tampilan ke tengah semula
-    document.body.classList.remove('keyboard-active');
-  }
-});
-
-// Deteksi alternatif khusus iOS saat input kehilangan fokus (blur)
+// Fungsi Scroll Otomatis yang Fleksibel ke Tengah Layar saat Kolom Ditekan
 document.querySelectorAll("input").forEach(el => {
-  el.addEventListener("blur", () => {
-    // Memastikan layar kembali normal di iOS Safari jika resize tidak ketat
+  el.addEventListener("focus", () => {
     setTimeout(() => {
-      if (window.innerHeight >= initialHeight - 150) {
-        document.body.classList.remove('keyboard-active');
-        window.scrollTo(0, 0);
-      }
-    }, 100);
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
   });
 });
 
-
-// 2. PROSES LOGIN FORM
+// Proses Form Login
 loginForm.addEventListener("submit",async(e)=>{
  e.preventDefault();
  loginBtn.disabled=true;
