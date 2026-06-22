@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Portal Login Ujian</title>
 <style>
 :root{
@@ -14,11 +14,12 @@ body{
   margin:0;
   min-height: 100dvh;
   display:flex;
-  justify-content:center; /* Pusatkan kartu secara horizontal */
-  align-items:center;    /* Pusatkan kartu secara vertikal */
+  justify-content:center;
+  align-items:center;
   padding:20px;
   background:linear-gradient(135deg,#1d4ed8,#334155);
   overflow-y:auto;
+  transition: align-items 0.3s ease; /* Transisi halus saat posisi bergeser */
 }
 .card{
   width:min(100%,460px);
@@ -28,7 +29,8 @@ body{
   padding:28px;
   box-shadow:0 12px 40px rgba(0,0,0,.35);
   animation:fade .45s ease;
-  margin: auto 0; /* Memastikan margin aman saat orientasi landscape atau layar pendek */
+  margin: auto 0;
+  transition: transform 0.3s ease; /* Transisi untuk pergeseran manual */
 }
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .logo{display:block;margin:0 auto 16px;width:clamp(110px,32vw,150px);height:auto}
@@ -37,7 +39,7 @@ h2{text-align:center;font-size:clamp(1rem,3.8vw,1.2rem);margin:.7rem 0;color:#e8
 p{text-align:center;color:#d7d7d7;margin-bottom:1.4rem}
 label{display:block;color:#fff;font-weight:bold;margin:.7rem 0 .35rem}
 input{
-  font-size:16px; /* Mencegah auto-zoom otomatis di iOS Safari */
+  font-size:16px; /* Wajib 16px agar iOS tidak memaksa auto-zoom */
   width:100%;padding:15px 16px;border-radius:14px;border:none;
 }
 input:focus{outline:2px solid #60a5fa}
@@ -56,20 +58,18 @@ button:hover{transform:translateY(-1px)}
  p{color:#444}
 }
 
-/* Memberikan ruang scroll tambahan di bagian bawah saat keyboard aktif di layar kecil */
-@media (max-height: 600px) {
-  body {
-    align-items: flex-start;
-  }
-  .card {
-    margin-top: 20px;
-    margin-bottom: 180px; /* Ruang kosong agar input bisa di-scroll ke atas keyboard */
-  }
+/* Class bantuan ketika keyboard aktif (akan dimanipulasi via JS) */
+body.keyboard-active {
+  align-items: flex-start !important;
+}
+body.keyboard-active .card {
+  margin-top: 10px !important;
+  margin-bottom: 250px !important; /* Memberikan ruang kosong ekstra di bawah */
 }
 </style>
 </head>
 <body>
-<div class="card">
+<div class="card" id="mainCard">
 <img src="logo.png" class="logo">
 <h1>SMP PGRI 1 CIBINONG</h1>
 <h2>ASESMEN SUMATIF TENGAH SEMESTER GANJIL</h2>
@@ -88,15 +88,42 @@ button:hover{transform:translateY(-1px)}
 const BACKEND_URL="https://portal-ujian-backend-eyg4.vercel.app/api/login";
 const REDIRECT_URL="https://sites.google.com/view/assessment-vhego/portal-2-ujian";
 
-// Posisikan input ke tengah layar secara mulus saat ditekan (fokus)
-document.querySelectorAll("input").forEach(el => {
-  el.addEventListener("focus", () => {
+// 1. DETEKSI KEYBOARD BERDASARKAN TINGGI LAYAR (Paling Akurat untuk Mobile)
+const initialHeight = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  // Jika tinggi layar berkurang lebih dari 150px, berasumsi keyboard muncul
+  if (window.innerHeight < initialHeight - 150) {
+    document.body.classList.add('keyboard-active');
+    
+    // Berikan sedikit delay agar transisi CSS selesai baru digulirkan ke tengah
     setTimeout(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
+      const activeInput = document.activeElement;
+      if (activeInput && (activeInput.id === 'peserta' || activeInput.id === 'password')) {
+        activeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
+  } else {
+    // Keyboard tertutup, kembalikan tampilan ke tengah semula
+    document.body.classList.remove('keyboard-active');
+  }
+});
+
+// Deteksi alternatif khusus iOS saat input kehilangan fokus (blur)
+document.querySelectorAll("input").forEach(el => {
+  el.addEventListener("blur", () => {
+    // Memastikan layar kembali normal di iOS Safari jika resize tidak ketat
+    setTimeout(() => {
+      if (window.innerHeight >= initialHeight - 150) {
+        document.body.classList.remove('keyboard-active');
+        window.scrollTo(0, 0);
+      }
+    }, 100);
   });
 });
 
+
+// 2. PROSES LOGIN FORM
 loginForm.addEventListener("submit",async(e)=>{
  e.preventDefault();
  loginBtn.disabled=true;
