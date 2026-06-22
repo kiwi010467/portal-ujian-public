@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Portal Login Ujian</title>
 <style>
 :root{
@@ -12,10 +12,10 @@
 body{
   font-family:Arial,Helvetica,sans-serif;
   margin:0;
-  min-height:100dvh;
+  min-height: 100dvh;
   display:flex;
-  justify-content:flex-start;
-  align-items:center;
+  justify-content:center; /* Pusatkan kartu secara horizontal */
+  align-items:center;    /* Pusatkan kartu secara vertikal */
   padding:20px;
   background:linear-gradient(135deg,#1d4ed8,#334155);
   overflow-y:auto;
@@ -28,6 +28,7 @@ body{
   padding:28px;
   box-shadow:0 12px 40px rgba(0,0,0,.35);
   animation:fade .45s ease;
+  margin: auto 0; /* Memastikan margin aman saat orientasi landscape atau layar pendek */
 }
 @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .logo{display:block;margin:0 auto 16px;width:clamp(110px,32vw,150px);height:auto}
@@ -35,9 +36,9 @@ h1{text-align:center;font-size:clamp(1.5rem,5vw,2rem);color:#fff}
 h2{text-align:center;font-size:clamp(1rem,3.8vw,1.2rem);margin:.7rem 0;color:#e8e8e8}
 p{text-align:center;color:#d7d7d7;margin-bottom:1.4rem}
 label{display:block;color:#fff;font-weight:bold;margin:.7rem 0 .35rem}
-input{font-size:16px;
- width:100%;padding:15px 16px;border-radius:14px;border:none;
- font-size:16px;
+input{
+  font-size:16px; /* Mencegah auto-zoom otomatis di iOS Safari */
+  width:100%;padding:15px 16px;border-radius:14px;border:none;
 }
 input:focus{outline:2px solid #60a5fa}
 button{
@@ -47,11 +48,23 @@ button{
 }
 button:hover{transform:translateY(-1px)}
 #status{margin-top:14px;min-height:1.4em;color:#fde68a;text-align:center}
+
 @media (prefers-color-scheme: light){
  body{background:linear-gradient(160deg,#dbeafe,#cbd5e1)}
  .card{background:rgba(255,255,255,.92)}
  h1,h2,label{color:#111}
  p{color:#444}
+}
+
+/* Memberikan ruang scroll tambahan di bagian bawah saat keyboard aktif di layar kecil */
+@media (max-height: 600px) {
+  body {
+    align-items: flex-start;
+  }
+  .card {
+    margin-top: 20px;
+    margin-bottom: 180px; /* Ruang kosong agar input bisa di-scroll ke atas keyboard */
+  }
 }
 </style>
 </head>
@@ -70,12 +83,20 @@ button:hover{transform:translateY(-1px)}
 <div id="status"></div>
 </form>
 </div>
+
 <script>
 const BACKEND_URL="https://portal-ujian-backend-eyg4.vercel.app/api/login";
 const REDIRECT_URL="https://sites.google.com/view/assessment-vhego/portal-2-ujian";
-document.querySelectorAll("input").forEach(el=>{
- el.addEventListener("focus",()=>setTimeout(()=>el.scrollIntoView({behavior:"smooth",block:"center"}),350));
+
+// Posisikan input ke tengah layar secara mulus saat ditekan (fokus)
+document.querySelectorAll("input").forEach(el => {
+  el.addEventListener("focus", () => {
+    setTimeout(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+  });
 });
+
 loginForm.addEventListener("submit",async(e)=>{
  e.preventDefault();
  loginBtn.disabled=true;
@@ -103,24 +124,5 @@ loginForm.addEventListener("submit",async(e)=>{
  }
 });
 </script>
-
-<script>
-(function(){
-if(window.visualViewport){
-  const vv = visualViewport;
-  function fix(){
-    document.body.style.height = vv.height + 'px';
-  }
-  vv.addEventListener('resize', fix);
-  vv.addEventListener('scroll', fix);
-}
-document.querySelectorAll('input').forEach(i=>{
-  i.addEventListener('focus',()=>{
-    setTimeout(()=>i.scrollIntoView({behavior:'smooth',block:'center'}),250);
-  });
-});
-})();
-</script>
-
 </body>
 </html>
